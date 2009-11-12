@@ -23,3 +23,8 @@ Installation
 1. Copy the script to ~/.purple/plugins
 2. Start Pidgin and choose Tools -> Plugins and activate the 'Show Spotify artist and song' plugin.
 
+Todo
+----
+Remove dependencies to XML::Simple and LWP::Simple and use the provided API from
+Pidgin instead, ie Purple::Util::fetch_url() and Purple::XMLNode
+
