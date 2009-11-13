@@ -17,16 +17,16 @@ our %PLUGIN_INFO = (
 );
 
 sub convert_link {
-	my ($account, $sender, $message, $conv, $flag, $data) = @_;
-	if ($message =~ /(?:open\.)?spotify(?:\.com)?(?:\/|:)(track|album)(?:\/|:)(.*?)(?:\s|<)+/) {
-	    $_[2] =  $message . get_artist_and_song($1, $2);
-	}
+    # matches a spotify uri or a spotify HTTP link
+    # $1 = original uri
+    # $2 = media, track or album
+    # $3 = media id
+    $_[2] =~ s/((?:http:\/\/)?(?:open\.)?spotify(?:\.com)?(?:\/|:)(track|album)(?:\/|:)(\w+))/$1 . ' ' . get_artist_and_song($2, $3)/eg;
     return 0;
 }
 
 sub get_artist_and_song {
-    my $media = shift;
-    my $id = shift;
+    my ($media, $id) = @_;
 
     my $data = get_data($id, $media);
     return " (" . parse_xml($data) . ")";
@@ -46,8 +46,7 @@ sub parse_xml {
 sub get_data {
     my ($id, $media) = @_;
     my $url = 'http://ws.spotify.com/lookup/1/?uri=spotify:' . $media . ':' . $id;
-    my $content = get($url);
-    return $content;
+    return get($url);
 }
 
 sub plugin_init {
