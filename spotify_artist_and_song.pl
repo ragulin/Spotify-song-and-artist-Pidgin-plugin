@@ -1,4 +1,3 @@
-use XML::Simple;
 use LWP::Simple;
 use Purple;
 
@@ -8,7 +7,7 @@ use warnings;
 our %PLUGIN_INFO = (
     perl_api_version => 2,
     name => "Show Spotify artist and song",
-    version => "0.1",
+    version => "0.2",
     summary => "Adds artist and song to incoming messages containing Spotify uris.",
     description => "Adds artist and song to incoming messages containing Spotify uris.",
     author => "Mikael Forsberg <mikael.forsberg\@athega.se>",
@@ -19,39 +18,36 @@ our %PLUGIN_INFO = (
 
 sub convert_link {
 	my ($account, $sender, $message, $conv, $flag, $data) = @_;
-	if ($message =~ /spotify:(track|album)|open\.spotify\.com/) {
-	    $_[2] =  $message . get_artist_and_song($message);
+	if ($message =~ /(?:open\.)?spotify(?:\.com)?(?:\/|:)(track|album)(?:\/|:)(.*?)(?:\s|<)+/) {
+	    $_[2] =  $message . get_artist_and_song($1, $2);
 	}
     return 0;
 }
 
 sub get_artist_and_song {
-    my $message = shift;
+    my $media = shift;
+    my $id = shift;
 
-    $message =~ /(?:open\.)?spotify(?:\.com)?(?:\/|:)(track|album)(?:\/|:)(.*?)(?:\s|<)+/;
-    my ($media, $id);
-    if (defined $1 && defined $2) {
-        $media = $1;
-        $id = $2;
-    } else {
-        return ;
-    }
-
-	return " (" . parse_link($id, $media) . ")";
+    my $data = get_data($id, $media);
+    return " (" . parse_xml($data) . ")";
 }
 
-sub parse_link {
-    my ($id, $media) = @_;
-    my $data = get_data($id, $media);
-    return $data->{$media}[0]{'name'}[0] . " by " . $data->{$media}[0]{'artist'}[0]{'name'}[0];
+sub parse_xml {
+    my $data = shift;
+    if (!$data) {
+        return;
+    }
+  	my $root = Purple::XMLNode::from_str($data);
+    my $name = $root->get_child("name")->get_data();
+    my $artist = $root->get_child("artist")->get_child("name")->get_data();
+    return "$name by $artist";
 }
 
 sub get_data {
     my ($id, $media) = @_;
     my $url = 'http://ws.spotify.com/lookup/1/?uri=spotify:' . $media . ':' . $id;
     my $content = get($url);
-    my $simple = new XML::Simple;
-    return $simple->XMLin($content, ForceArray => 1, KeepRoot => 1);
+    return $content;
 }
 
 sub plugin_init {
@@ -62,7 +58,7 @@ sub plugin_load {
     my $plugin = shift;
     my $message_handle = Purple::Conversations::get_handle();
     Purple::Signal::connect($message_handle, "receiving-im-msg",
-                                 $plugin, \&convert_link, undef);
+                                 $plugin, \&convert_link, $plugin);
 }
 
 sub plugin_unload {

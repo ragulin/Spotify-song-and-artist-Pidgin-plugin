@@ -15,7 +15,6 @@ Tested on Ubuntu 9.04 and Pidgin 2.6.3
 Requirements
 ------------
 * Perl http://www.perl.org/
-* XML::Simple http://search.cpan.org/dist/XML-Simple/lib/XML/Simple.pm
 * LWP::Simple http://search.cpan.org/~gaas/libwww-perl-5.833/lib/LWP/Simple.pm
 
 Installation
@@ -25,6 +24,6 @@ Installation
 
 Todo
 ----
-Remove dependencies to XML::Simple and LWP::Simple and use the provided API from
-Pidgin instead, ie Purple::Util::fetch_url() and Purple::XMLNode
+Remove dependencies to LWP::Simple and use the provided API from
+Pidgin instead, ie Purple::Util::fetch_url()
 
